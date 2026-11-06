@@ -1,0 +1,17 @@
+{
+  "name": "blockchain-voting-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend for Blockchain-Based College Voting System",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  }
+}

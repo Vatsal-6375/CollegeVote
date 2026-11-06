@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CollegeVote — College Voting System</title>
+  <link rel="stylesheet" href="/src/css/styles.css">
+  <!-- Ethers.js v6 via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.0/ethers.min.js"></script>
+  <!-- Application Script -->
+  <script type="module" src="/src/js/app.js"></script>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <header class="navbar-header">
+    <nav class="navbar" id="navbar">
+      <div class="nav-container">
+        <a href="#home" class="nav-logo">
+          <span class="logo-icon">🗳️</span>
+          <span class="logo-text">CollegeVote</span>
+        </a>
+
+        <div class="nav-menu" id="navMenu">
+          <ul class="nav-links">
+            <li><a href="#home" class="nav-link active" data-page="home">Home</a></li>
+            <li><a href="#candidates" class="nav-link" data-page="candidates">Candidates</a></li>
+            <li><a href="#vote" class="nav-link" data-page="vote">Vote</a></li>
+            <li><a href="#results" class="nav-link" data-page="results">Results</a></li>
+            <li><a href="#admin" class="nav-link" data-page="admin">Admin</a></li>
+          </ul>
+
+          <div class="nav-actions">
+            <button id="navConnectBtn" class="btn btn-accent nav-wallet-btn">
+              Connect Wallet
+            </button>
+          </div>
+        </div>
+
+        <button class="nav-hamburger" id="navToggle" aria-label="Toggle navigation menu">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Network Warning Banner -->
+  <aside id="networkWarning" class="network-warning" style="display: none;">
+    <div class="warning-content">
+      <span class="warning-icon">⚠️</span>
+      <span class="warning-text">Wrong Network! Please switch to Hardhat Local Network (Chain ID: 31337)</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <!-- PAGE: HOME -->
+    <section id="page-home" class="page active">
+      <!-- Hero Section -->
+      <article class="hero-section card">
+        <div class="hero-badge">🎓 Blockchain Election Portal</div>
+        <h1 class="hero-title">Blockchain-Based College Voting System</h1>
+        <p class="hero-subtitle">A transparent and decentralized platform for secure college elections.</p>
+        <p class="hero-desc">Vote digitally using your MetaMask wallet. Every valid vote is recorded on the blockchain.</p>
+        <div class="hero-buttons">
+          <a href="#vote" class="btn btn-primary btn-lg">Cast Your Vote</a>
+          <a href="#results" class="btn btn-outline btn-lg">View Results</a>
+        </div>
+      </article>
+
+      <!-- Stats Grid -->
+      <section class="stats-section">
+        <div class="section-header-compact">
+          <h2>Election Overview</h2>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+              <span class="stat-label">Election Status</span>
+              <span id="statElectionStatus" class="stat-value badge-idle">Not Started</span>
+            </div>
+          </div>
+
+          <div class="stat-card card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <span class="stat-label">Total Candidates</span>
+              <span id="statCandidateCount" class="stat-value">0</span>
+            </div>
+          </div>
+
+          <div class="stat-card card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-info">
+              <span class="stat-label">Total Votes</span>
+              <span id="statTotalVotes" class="stat-value">0</span>
+            </div>
+          </div>
+
+          <div class="stat-card card">
+            <div class="stat-icon">🔗</div>
+            <div class="stat-info">
+              <span class="stat-label">Connected Wallet</span>
+              <span id="statWallet" class="stat-value">Not Connected</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How It Works Section -->
+      <section class="how-it-works-section">
+        <div class="section-header">
+          <h2>How It Works</h2>
+          <p class="text-secondary">A simple three-step process for secure and tamper-proof digital voting</p>
+        </div>
+        <div class="steps-grid">
+          <div class="step-card card">
+            <div class="step-badge">1</div>
+            <h3 class="step-title">Admin Setup</h3>
+            <p class="step-desc">The administrator adds candidates and registers eligible voter wallet addresses.</p>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-badge">2</div>
+            <h3 class="step-title">Cast Your Vote</h3>
+            <p class="step-desc">Registered voters connect MetaMask and securely vote for their preferred candidate.</p>
+          </div>
+
+          <div class="step-card card">
+            <div class="step-badge">3</div>
+            <h3 class="step-title">View Results</h3>
+            <p class="step-desc">Votes are recorded on the blockchain. Results are transparent and tamper-proof.</p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- PAGE: CANDIDATES -->
+    <section id="page-candidates" class="page" style="display: none;">
+      <div class="page-header">
+        <h2>Election Candidates</h2>
+        <p class="page-description">Candidates are students participating in the college election. Eligible voters can choose one candidate.</p>
+      </div>
+
+      <div id="candidatesList" class="candidates-grid"></div>
+
+      <div id="noCandidates" class="empty-state">
+        <div class="empty-icon">👥</div>
+        <h3>No Candidates Available</h3>
+        <p>No candidates have been added yet. The administrator will add candidates before the election begins.</p>
+      </div>
+    </section>
+
+    <!-- PAGE: VOTE -->
+    <section id="page-vote" class="page" style="display: none;">
+      <div class="page-header">
+        <h2>Cast Your Vote</h2>
+        <p class="page-description">Select the candidate you want to support. Each registered wallet is allowed to cast only one vote.</p>
+      </div>
+
+      <div class="voting-flow">
+        <!-- Step 1: Wallet Connection -->
+        <article id="voteStep1" class="card vote-step-card">
+          <div class="step-card-header">
+            <span class="step-number">1</span>
+            <h3>Step 1: Connect Your Wallet</h3>
+          </div>
+          <div class="step-card-body">
+            <p class="text-secondary">Connect your MetaMask wallet containing the address registered with the college administration.</p>
+            <div class="step-action-row">
+              <button id="voteConnectBtn" class="btn btn-primary">Connect Wallet</button>
+            </div>
+
+            <div id="walletInfo" class="wallet-info-panel" style="display: none;">
+              <div class="info-row">
+                <span class="info-label">Wallet Address:</span>
+                <code id="voterAddress" class="address-display"></code>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Voter Status:</span>
+                <span id="voterStatus" class="voter-status"></span>
+              </div>
+            </div>
+
+            <div id="unregisteredWarning" class="warning-box" style="display: none;">
+              <div class="warning-message">
+                <p>⚠️ Your wallet is not registered as an eligible voter. Please contact the election administrator.</p>
+              </div>
+              <details class="wallet-faq">
+                <summary>Why is a wallet address required?</summary>
+                <div class="faq-content">
+                  <p>Your MetaMask wallet has a unique public address (like 0xAbc...). The administrator adds this address to the eligible voter list. The smart contract checks this address before allowing a vote. Your student name is not stored on the blockchain — only your wallet address is used for verification.</p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </article>
+
+        <!-- Step 2: Candidate Selection -->
+        <article id="voteStep2" class="card vote-step-card disabled">
+          <div class="step-card-header">
+            <span class="step-number">2</span>
+            <h3>Step 2: Select a Candidate</h3>
+          </div>
+          <div class="step-card-body">
+            <p class="text-secondary">Click on your chosen candidate to select them for your ballot.</p>
+            <div id="votingCandidates" class="voting-candidates-grid"></div>
+          </div>
+        </article>
+
+        <!-- Step 3: Confirmation -->
+        <article id="voteStep3" class="card vote-step-card disabled">
+          <div class="step-card-header">
+            <span class="step-number">3</span>
+            <h3>Step 3: Confirm Your Vote</h3>
+          </div>
+          <div class="step-card-body">
+            <div id="selectedCandidateInfo" class="selected-candidate-info">
+              <p class="text-secondary">Please select a candidate in Step 2 above.</p>
+            </div>
+            <div class="step-action-row">
+              <button id="confirmVoteBtn" class="btn btn-accent btn-lg">Confirm Vote</button>
+            </div>
+            <div id="alreadyVotedMsg" class="alert alert-success" style="display: none;">
+              ✅ You have already cast your vote. Thank you for participating!
+            </div>
+          </div>
+        </article>
+
+        <!-- Vote Success Message -->
+        <div id="voteSuccess" class="alert alert-success vote-success-panel card" style="display: none;">
+          <div class="success-icon">🎉</div>
+          <h3>✅ Your vote has been successfully recorded on the blockchain!</h3>
+          <p class="success-desc">Your vote is now permanently stored on the decentralized ledger.</p>
+          <div class="tx-hash-wrapper">
+            <span>Transaction Hash:</span>
+            <code id="voteTxHash" class="tx-hash"></code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: RESULTS -->
+    <section id="page-results" class="page" style="display: none;">
+      <div class="page-header">
+        <div class="header-with-badge">
+          <h2>Election Results</h2>
+          <span id="resultsStatus" class="results-badge badge-idle">⏳ Election Not Started</span>
+        </div>
+        <p class="results-note text-secondary">Results are retrieved directly from the deployed smart contract.</p>
+        <h3 id="resultsTotalVotes" class="results-total">Total Votes Cast: 0</h3>
+      </div>
+
+      <!-- Winner Announcement -->
+      <div id="winnerAnnouncement" class="winner-wrapper" style="display: none;"></div>
+
+      <!-- Results Progress Bars Container -->
+      <div id="resultsContainer" class="results-container card"></div>
+
+      <!-- Empty State -->
+      <div id="noResults" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>No Votes Recorded</h3>
+        <p>No votes have been cast yet.</p>
+      </div>
+    </section>
+
+    <!-- PAGE: ADMIN -->
+    <section id="page-admin" class="page" style="display: none;">
+      <div class="page-header">
+        <h2>Election Administration</h2>
+        <p class="page-description">Administrative portal for managing candidates, voter registration, and election lifecycle.</p>
+      </div>
+
+      <!-- Admin Status Card -->
+      <article class="card admin-status-card">
+        <div class="admin-status-grid">
+          <div class="admin-status-item">
+            <span class="status-item-label">Connected Wallet:</span>
+            <strong id="adminWallet" class="status-item-value">Not Connected</strong>
+          </div>
+          <div class="admin-status-item">
+            <span class="status-item-label">Admin Status:</span>
+            <span id="adminStatus" class="admin-badge unauthorized">Checking...</span>
+          </div>
+          <div class="admin-status-item">
+            <span class="status-item-label">Election State:</span>
+            <strong id="adminElectionState" class="status-item-value">Not Started</strong>
+          </div>
+        </div>
+      </article>
+
+      <!-- Access Denied Alert -->
+      <div id="adminDenied" class="alert alert-error" style="display: none;">
+        <span class="alert-icon">🔒</span>
+        <div class="alert-content">
+          <strong>Access denied.</strong> Only the election administrator can manage this election.
+        </div>
+      </div>
+
+      <!-- Admin Controls Grid -->
+      <div id="adminControls" class="admin-controls-grid" style="display: none;">
+        <!-- Card A: Manage Candidates -->
+        <article id="adminCandidatesCard" class="card admin-card">
+          <div class="card-header">
+            <span class="card-icon">👥</span>
+            <h3>Add Election Candidate</h3>
+          </div>
+          <p class="card-desc">Add students who are participating in the election.</p>
+          <div class="form-group">
+            <label for="candidateNameInput">Candidate Name</label>
+            <input type="text" id="candidateNameInput" placeholder="Enter candidate name" class="form-input">
+          </div>
+          <button id="addCandidateBtn" class="btn btn-primary">Add Candidate</button>
+          <div id="adminCandidatesList" class="admin-candidates-list"></div>
+        </article>
+
+        <!-- Card B: Register Voters -->
+        <article id="adminVotersCard" class="card admin-card">
+          <div class="card-header">
+            <span class="card-icon">📝</span>
+            <h3>Register Eligible Voters</h3>
+          </div>
+          <p class="card-desc">Register the MetaMask wallet addresses of students who are allowed to vote.</p>
+          <div class="form-group">
+            <label for="voterAddressInput">Voter Wallet Address</label>
+            <input type="text" id="voterAddressInput" placeholder="Enter voter wallet address (0x...)" class="form-input">
+          </div>
+          <button id="registerVoterBtn" class="btn btn-primary">Register Voter</button>
+
+          <div class="info-box">
+            <h4>Why do we need a wallet address instead of a student name?</h4>
+            <p>MetaMask provides each wallet with a unique public address. The smart contract uses this address to identify eligible voters. Student names and personal details are not stored on the blockchain for privacy.</p>
+          </div>
+
+          <div id="voterValidation" class="validation-messages"></div>
+        </article>
+
+        <!-- Card C: Election Controls -->
+        <article id="adminElectionCard" class="card admin-card">
+          <div class="card-header">
+            <span class="card-icon">⚙️</span>
+            <h3>Election Management</h3>
+          </div>
+          <p id="electionControlStatus" class="control-status">Current Status: Not Started</p>
+          <div class="admin-btn-group">
+            <button id="startElectionBtn" class="btn btn-accent">Start Election</button>
+            <button id="endElectionBtn" class="btn btn-danger">End Election</button>
+          </div>
+          <div id="electionMessages" class="election-messages"></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <span class="footer-logo">🗳️ CollegeVote</span>
+        <p class="footer-tagline">Transparent, secure, and decentralized college elections powered by Ethereum smart contracts.</p>
+      </div>
+      <div class="footer-meta">
+        <p>© 2026 CollegeVote College Voting System</p>
+        <p class="footer-sub">Smart Contract Deployed on Hardhat Local Network (Chain ID: 31337)</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p class="loading-text">Processing blockchain transaction...</p>
+      <span class="loading-sub">Please confirm and wait for the transaction to be mined.</span>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card card">
+      <h3 class="modal-title">Confirm Action</h3>
+      <p class="modal-message">Are you sure you want to proceed?</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline modal-cancel">Cancel</button>
+        <button class="btn btn-primary modal-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
